@@ -1,0 +1,17 @@
+Package: mixage
+Type: Package
+Title: Analyzing age preference data to inform mathematical models of STIs
+Version: 1.0
+Date: 2017-10-28
+Author: Caleb Easterly, Fernando Alarid-Escudero
+Maintainer: Caleb Easterly, <easte080@umn.edu>
+Description: Functions for statistical analysis of age preference data from sexual behavior surveys. 
+URL: https://github.com/caleb-easterly/mixage
+BugReports: https://github.com/caleb-easterly/mixage/issues
+Encoding: UTF-8
+License: GPLv3.0
+Imports:
+    extraDistr,
+    dplyr
+LazyData: yes
+RoxygenNote: 6.0.1
