@@ -2,8 +2,7 @@
 % Please edit documentation in R/estimate_age_mixing.R
 \name{estimate_age_mixing}
 \alias{estimate_age_mixing}
-\title{calculate age mixing structures 
-DESCRIBE TRANSFORMATIONS HERE}
+\title{calculate age mixing structures}
 \usage{
 estimate_age_mixing(choice_data, max_age, start_ages,
   distribution = c("gamma", "laplace", "normal"), variance_model = c("sqrt",
@@ -29,6 +28,5 @@ Choose \code{linear}, \code{sqrt}, \code{log}, or \code{const}.}
 \code{death_prob[12]} is for 12-year-old, and so on. If not supplied, default is taken from  2011 US life tables}
 }
 \description{
-calculate age mixing structures 
 DESCRIBE TRANSFORMATIONS HERE
 }
