@@ -10,5 +10,5 @@ mixing_matrix_negloglikelihood <- function(listMF, Mcounts_data, Fcounts_data){
     Fmat <- listMF[[2]]
     offset <- 1e-9
     loglike <- sum(Mcounts_data * log(Mmat + offset) + Fcounts_data * log(Fmat + offset))
-    return(loglike)
+    return(-loglike)
 }
