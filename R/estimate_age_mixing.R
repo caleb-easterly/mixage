@@ -21,6 +21,8 @@ def_age_group_list <- function(start_ages, max_age = 74){
 
 
 #' calculate age mixing structures 
+#' 
+#' @description 
 #' DESCRIBE TRANSFORMATIONS HERE
 #' 
 #' @param max_age
@@ -89,8 +91,8 @@ estimate_age_mixing <- function(choice_data,
     
     # if weights not provided, set to null
     if (is.null(choice_data$weights)){
-        total_wt <- NULL
-    }
+        weights <- NULL
+    } 
     
     # calculate the mean age in each age group, using age distribution
     mean_ages <- avg_group_age(age_group_list_indices = indices)
@@ -100,7 +102,7 @@ estimate_age_mixing <- function(choice_data,
     mean_age_F_df <- data.frame("chsage" = mean_ages, "sex" = "Female")
     
     # changed from male and female separate
-    ptlm <- lm(ptage ~ chsage + sex, data = pt, weights = total_wt) 
+    ptlm <- lm(ptage ~ chsage + sex, data = pt, weights = weights) 
 
     #predict m and f
     Mpred <- predict(ptlm, newdata = mean_age_M_df)
@@ -121,19 +123,19 @@ estimate_age_mixing <- function(choice_data,
     ## Model the variance
     variance_model = match.arg(variance_model)
     if (variance_model == "sqrt"){
-        mod.var <- lm(sqrt(resid^2) ~ chsage + sex, data = pt, weights = total_wt)
+        mod.var <- lm(sqrt(resid^2) ~ chsage + sex, data = pt, weights = weights)
         # Recover desired variance for each level of x. This is what we need for MoM!
         Mvar_reg <- (predict(mod.var, newdata = mean_age_M_df))^2
         Fvar_reg <- (predict(mod.var, newdata = mean_age_F_df))^2
     } 
     if (variance_model == "log"){
-        mod.var <- lm(log(resid^2) ~ chsage + sex, data = pt, weights = total_wt)
+        mod.var <- lm(log(resid^2) ~ chsage + sex, data = pt, weights = weights)
         # Recover desired variance for each level of x. This is what we need for MoM!
         Mvar_reg <- exp(predict(mod.var, newdata = mean_age_M_df))
         Fvar_reg <- exp(predict(mod.var, newdata = mean_age_F_df))
     }
     if (variance_model == "linear"){
-        mod.var <- lm(resid^2 ~ chsage + sex, data = pt, weights = total_wt)
+        mod.var <- lm(resid^2 ~ chsage + sex, data = pt, weights = weights)
         # Recover desired variance for each level of x. This is what we need for MoM!
         Mvar_reg <- predict(mod.var, newdata = mean_age_M_df)
         Mvar_reg[which(Mvar_reg < 0)] <- min(Mvar_reg[which(Mvar_reg > 0)])
@@ -168,7 +170,6 @@ estimate_age_mixing <- function(choice_data,
         #evaluate gamma distribution at 12 to 74 years, using
         #differences in cumulative distribution function
         for (i in 1:length(start_ages)){
-            ##using pgamma and actual age groups)
             Mreg_raw_probs <- pgamma(high_age, shape = grp_gam[i, 1], rate = grp_gam[i, 2]) -
                 pgamma(temp_start_ages, shape = grp_gam[i, 1], rate = grp_gam[i, 2])
             Freg_raw_probs <- pgamma(high_age, shape = grp_gam[i, 3], rate = grp_gam[i, 4]) -
@@ -195,7 +196,6 @@ estimate_age_mixing <- function(choice_data,
         )
         
         for (i in 1:length(start_ages)){
-            ##using pgamma and actual age groups)
             Mreg_raw_probs_lap <- plaplace(high_age, mu = lap_reg[i, 1],
                                            sigma = lap_reg[i, 2]) -
                 plaplace(temp_start_ages, mu = lap_reg[i, 1],
@@ -213,7 +213,6 @@ estimate_age_mixing <- function(choice_data,
     # Normal distribution
     if (distribution == "normal") {
         for (i in 1:length(start_ages)){
-            ##using pgamma and actual age groups)
             Mreg_raw_probs_norm <- pnorm(high_age, mean = Mpred[i], sd = sqrt(Mvar_reg[i])) -
                 pnorm(temp_start_ages,  mean = Mpred[i], sd = sqrt(Mvar_reg[i]))
             Freg_raw_probs_norm <-  pnorm(high_age, mean = Fpred[i], sd = sqrt(Fvar_reg[i])) -
@@ -238,121 +237,120 @@ subset_dat_age <- function(i, data, minAges, maxAges){
     subset(data, chsage >= minAges[i] & chsage <= maxAges[i])
 }
 
-# try to transform response instead
-pt_choice_all_response_transform <- function(indices,
-                                                mean_ages,
-                                                agevec, 
-                                                response_transform = c("sqrt", "log", "none")){
-    data("longform_choice_data")
-    pt <- longform_choice_data
-    n_age <- length(indices)
-    
-    # mean chooser age in each group 
-    mean_age_M_df <- data.frame("chsage" = mean_ages, "sex" = "Male")
-    mean_age_F_df <- data.frame("chsage" = mean_ages, "sex" = "Female")
-    
-    ## Model the variance
-    response_transform = match.arg(response_transform)
-    if (response_transform == "sqrt"){
-        ptlm <- lm(sqrt(ptage) ~ chsage + sex, data = pt, weights = total_wt)
-        # Recover desired variance for each level of x. This is what we need for MoM!
-        Mpred <- (predict(ptlm, newdata = mean_age_M_df, interval = "prediction"))^2
-        Fpred <- (predict(ptlm, newdata = mean_age_F_df, interval = "prediction"))^2
-        Mvar <- ((Mpred[, "upr"] - Mpred[, "lwr"])/4)^2
-        Fvar <- ((Fpred[, "upr"] - Fpred[, "lwr"])/4)^2
-    }
-    if (response_transform == "log"){
-        ptlm <- lm(log(ptage) ~ chsage + sex, data = pt, weights = total_wt)
-        # Recover desired variance for each level of x. This is what we need for MoM!
-        Mpred <- exp(predict(ptlm, newdata = mean_age_M_df, interval = "prediction"))
-        Fpred <- exp(predict(ptlm, newdata = mean_age_F_df, interval = "prediction"))
-        Mvar <- ((Mpred[, "upr"] - Mpred[, "lwr"])/4)^2
-        Fvar <- ((Fpred[, "upr"] - Fpred[, "lwr"])/4)^2
-    }
-    if (response_transform == "none"){
-        ptlm <- lm(ptage ~ chsage + sex, data = pt, weights = total_wt)
-        # Recover desired variance for each level of x. This is what we need for MoM!
-        Mpred <- predict(ptlm, newdata = mean_age_M_df, interval = "prediction")
-        Fpred <- predict(ptlm, newdata = mean_age_F_df, interval = "prediction")
-        Mvar <- ((Mpred[, "upr"] - Mpred[, "lwr"])/4)^2
-        Fvar <- ((Fpred[, "upr"] - Fpred[, "lwr"])/4)^2
-    }
-    
-    ## Gamma
-    grp_gam <- shared_gam <- matrix(0, nrow = n_age, ncol = 4)
-    colnames(grp_gam) <- c("Mshape", "Mrate", "Fshape", "Frate")
-    for (i in 1:n_age){
-        grp_gam[i, ] <- c(gam_param(Mpred[i], Mvar[i]),
-                          gam_param(Fpred[i], Fvar[i]))
-    }
-    
-    #set up and fill MOME and FOME
-    #initialize MOME&FOME
-    MOMEreg_gam <- FOMEreg_gam <- matrix(0, n_age, n_age)
-    # right ends of the age intervals
-    high_age <- agevec + c(diff(agevec), 74 - max(agevec))
-    temp_agevec <- agevec
-    temp_agevec[1] <- 0 #theoretical lowest bound
-    
-    #evaluate gamma distribution at 12 to 74 years, using
-    #differences in cumulative distribution function
-    for (i in 1:length(agevec)){
-        ##using pgamma and actual age groups)
-        Mreg_raw_probs <- pgamma(high_age, shape = grp_gam[i, 1], rate = grp_gam[i, 2]) -
-            pgamma(temp_agevec, shape = grp_gam[i, 1], rate = grp_gam[i, 2])
-        Freg_raw_probs <- pgamma(high_age, shape = grp_gam[i, 3], rate = grp_gam[i, 4]) -
-            pgamma(temp_agevec, shape = grp_gam[i, 3], rate = grp_gam[i, 4])
-        MOMEreg_gam[i, ] <- Mreg_raw_probs / sum(Mreg_raw_probs)
-        FOMEreg_gam[i, ] <- Freg_raw_probs / sum(Freg_raw_probs)
-    }
-    
-    ### Laplace
-    #set up and fill MOME and FOME
-    MOMEreg_lap <- FOMEreg_lap <- matrix(0, n_age, n_age)
-    
-    # use regression predictions to get laplace estimates
-    # transpose makes same dimension/format as gamma parameters
-    lap_reg <- t(sapply(1:n_age, 
-                        function(x) {
-                            c(
-                                laplace_MOM(Mpred[x], Mvar[x]),
-                                laplace_MOM(Fpred[x], Fvar[x])
-                            )
-                        }
-        )
-    )
-    
-    for (i in 1:length(agevec)){
-        ##using pgamma and actual age groups)
-        Mreg_raw_probs_lap <- plaplace(high_age, mu = lap_reg[i, 1],
-                                       sigma = lap_reg[i, 2]) -
-            plaplace(temp_agevec, mu = lap_reg[i, 1],
-                     sigma = lap_reg[i, 2])
-        Freg_raw_probs_lap <- plaplace(high_age, mu = lap_reg[i, 3],
-                                       sigma = lap_reg[i, 4]) -
-            plaplace(temp_agevec, mu = lap_reg[i, 3],
-                     sigma = lap_reg[i, 4])
-        MOMEreg_lap[i, ] <- Mreg_raw_probs_lap / sum(Mreg_raw_probs_lap)
-        FOMEreg_lap[i, ] <- Freg_raw_probs_lap / sum(Freg_raw_probs_lap)
-    }
-    
-    # Normal distribution
-    # define normal MOME and FOME
-    MOMEreg_norm <- FOMEreg_norm <- matrix(0, n_age, n_age)
-    
-    for (i in 1:length(agevec)){
-        ##using pgamma and actual age groups)
-        Mreg_raw_probs_norm <- pnorm(high_age, mean = Mpred[i], sd = sqrt(Mvar[i])) -
-            pnorm(temp_agevec,  mean = Mpred[i], sd = sqrt(Mvar[i]))
-        Freg_raw_probs_norm <-  pnorm(high_age, mean = Fpred[i], sd = sqrt(Fvar[i])) -
-            pnorm(temp_agevec,  mean = Fpred[i], sd = sqrt(Fvar[i]))
-        
-        MOMEreg_norm[i, ] <- Mreg_raw_probs_norm / sum(Mreg_raw_probs_norm)
-        FOMEreg_norm[i, ] <- Freg_raw_probs_norm / sum(Freg_raw_probs_norm)
-    }
-    
-    return(list(gamReg = list("MOMEreg_gam" = MOMEreg_gam, "FOMEreg_gam" = FOMEreg_gam),
-                lapReg = list("MOMEreg_lap" = MOMEreg_lap, "FOMEreg_lap" = FOMEreg_lap),
-                normReg = list("MOMEreg_norm" = MOMEreg_norm, "FOMEreg_norm" = FOMEreg_norm))
-    )
-}
+# # try to transform response instead
+# pt_choice_all_response_transform <- function(indices,
+#                                                 mean_ages,
+#                                                 agevec, 
+#                                                 response_transform = c("sqrt", "log", "none")){
+#     data("longform_choice_data")
+#     pt <- longform_choice_data
+#     n_age <- length(indices)
+#     
+#     # mean chooser age in each group 
+#     mean_age_M_df <- data.frame("chsage" = mean_ages, "sex" = "Male")
+#     mean_age_F_df <- data.frame("chsage" = mean_ages, "sex" = "Female")
+#     
+#     ## Model the variance
+#     response_transform = match.arg(response_transform)
+#     if (response_transform == "sqrt"){
+#         ptlm <- lm(sqrt(ptage) ~ chsage + sex, data = pt, weights = weights)
+#         # Recover desired variance for each level of x. This is what we need for MoM!
+#         Mpred <- (predict(ptlm, newdata = mean_age_M_df, interval = "prediction"))^2
+#         Fpred <- (predict(ptlm, newdata = mean_age_F_df, interval = "prediction"))^2
+#         Mvar <- ((Mpred[, "upr"] - Mpred[, "lwr"])/4)^2
+#         Fvar <- ((Fpred[, "upr"] - Fpred[, "lwr"])/4)^2
+#     }
+#     if (response_transform == "log"){
+#         ptlm <- lm(log(ptage) ~ chsage + sex, data = pt, weights = weights)
+#         # Recover desired variance for each level of x. This is what we need for MoM!
+#         Mpred <- exp(predict(ptlm, newdata = mean_age_M_df, interval = "prediction"))
+#         Fpred <- exp(predict(ptlm, newdata = mean_age_F_df, interval = "prediction"))
+#         Mvar <- ((Mpred[, "upr"] - Mpred[, "lwr"])/4)^2
+#         Fvar <- ((Fpred[, "upr"] - Fpred[, "lwr"])/4)^2
+#     }
+#     if (response_transform == "none"){
+#         ptlm <- lm(ptage ~ chsage + sex, data = pt, weights = weights)
+#         # Recover desired variance for each level of x. This is what we need for MoM!
+#         Mpred <- predict(ptlm, newdata = mean_age_M_df, interval = "prediction")
+#         Fpred <- predict(ptlm, newdata = mean_age_F_df, interval = "prediction")
+#         Mvar <- ((Mpred[, "upr"] - Mpred[, "lwr"])/4)^2
+#         Fvar <- ((Fpred[, "upr"] - Fpred[, "lwr"])/4)^2
+#     }
+#     
+#     ## Gamma
+#     grp_gam <- shared_gam <- matrix(0, nrow = n_age, ncol = 4)
+#     colnames(grp_gam) <- c("Mshape", "Mrate", "Fshape", "Frate")
+#     for (i in 1:n_age){
+#         grp_gam[i, ] <- c(gam_param(Mpred[i], Mvar[i]),
+#                           gam_param(Fpred[i], Fvar[i]))
+#     }
+#     
+#     #set up and fill MOME and FOME
+#     #initialize MOME&FOME
+#     MOMEreg_gam <- FOMEreg_gam <- matrix(0, n_age, n_age)
+#     # right ends of the age intervals
+#     high_age <- agevec + c(diff(agevec), 74 - max(agevec))
+#     temp_agevec <- agevec
+#     temp_agevec[1] <- 0 #theoretical lowest bound
+#     
+#     #evaluate gamma distribution at 12 to 74 years, using
+#     #differences in cumulative distribution function
+#     for (i in 1:length(agevec)){
+#         ##using pgamma and actual age groups)
+#         Mreg_raw_probs <- pgamma(high_age, shape = grp_gam[i, 1], rate = grp_gam[i, 2]) -
+#             pgamma(temp_agevec, shape = grp_gam[i, 1], rate = grp_gam[i, 2])
+#         Freg_raw_probs <- pgamma(high_age, shape = grp_gam[i, 3], rate = grp_gam[i, 4]) -
+#             pgamma(temp_agevec, shape = grp_gam[i, 3], rate = grp_gam[i, 4])
+#         MOMEreg_gam[i, ] <- Mreg_raw_probs / sum(Mreg_raw_probs)
+#         FOMEreg_gam[i, ] <- Freg_raw_probs / sum(Freg_raw_probs)
+#     }
+#     
+#     ### Laplace
+#     #set up and fill MOME and FOME
+#     MOMEreg_lap <- FOMEreg_lap <- matrix(0, n_age, n_age)
+#     
+#     # use regression predictions to get laplace estimates
+#     # transpose makes same dimension/format as gamma parameters
+#     lap_reg <- t(sapply(1:n_age, 
+#                         function(x) {
+#                             c(
+#                                 laplace_MOM(Mpred[x], Mvar[x]),
+#                                 laplace_MOM(Fpred[x], Fvar[x])
+#                             )
+#                         }
+#         )
+#     )
+#     
+#     for (i in 1:length(agevec)){
+#         Mreg_raw_probs_lap <- plaplace(high_age, mu = lap_reg[i, 1],
+#                                        sigma = lap_reg[i, 2]) -
+#             plaplace(temp_agevec, mu = lap_reg[i, 1],
+#                      sigma = lap_reg[i, 2])
+#         Freg_raw_probs_lap <- plaplace(high_age, mu = lap_reg[i, 3],
+#                                        sigma = lap_reg[i, 4]) -
+#             plaplace(temp_agevec, mu = lap_reg[i, 3],
+#                      sigma = lap_reg[i, 4])
+#         MOMEreg_lap[i, ] <- Mreg_raw_probs_lap / sum(Mreg_raw_probs_lap)
+#         FOMEreg_lap[i, ] <- Freg_raw_probs_lap / sum(Freg_raw_probs_lap)
+#     }
+#     
+#     # Normal distribution
+#     # define normal MOME and FOME
+#     MOMEreg_norm <- FOMEreg_norm <- matrix(0, n_age, n_age)
+#     
+#     for (i in 1:length(agevec)){
+#         ##using pgamma and actual age groups)
+#         Mreg_raw_probs_norm <- pnorm(high_age, mean = Mpred[i], sd = sqrt(Mvar[i])) -
+#             pnorm(temp_agevec,  mean = Mpred[i], sd = sqrt(Mvar[i]))
+#         Freg_raw_probs_norm <-  pnorm(high_age, mean = Fpred[i], sd = sqrt(Fvar[i])) -
+#             pnorm(temp_agevec,  mean = Fpred[i], sd = sqrt(Fvar[i]))
+#         
+#         MOMEreg_norm[i, ] <- Mreg_raw_probs_norm / sum(Mreg_raw_probs_norm)
+#         FOMEreg_norm[i, ] <- Freg_raw_probs_norm / sum(Freg_raw_probs_norm)
+#     }
+#     
+#     return(list(gamReg = list("MOMEreg_gam" = MOMEreg_gam, "FOMEreg_gam" = FOMEreg_gam),
+#                 lapReg = list("MOMEreg_lap" = MOMEreg_lap, "FOMEreg_lap" = FOMEreg_lap),
+#                 normReg = list("MOMEreg_norm" = MOMEreg_norm, "FOMEreg_norm" = FOMEreg_norm))
+#     )
+# }
