@@ -3,7 +3,7 @@
 # List of vectors of all ages in each age group
 # 
 # @param death_prob
-# Length 100 vector. First entry is probability of dying in the next year for 1-year-old,
+# Length 99 vector. First entry is probability of dying in the next year for 1-year-old,
 # 12th entry is for 12-year-old, and so on. 
 # 
 calculate_age_distribution <- function(all_ind, death_prob = NULL){
@@ -15,19 +15,19 @@ calculate_age_distribution <- function(all_ind, death_prob = NULL){
         # import life-table data
         data("life_table_data")
         
-        #probabilities of death for age 1 to 100
+        #probabilities of death for age 1 to 99
         #created so that 12th entry is age 12 to 13, for example
-        #2nd column is probability of dying, 4th row is 1-2 year-old age cohort
-        death_prob <- as.numeric(matrix(life_table_data[4:103, 2]))
+        #2nd column is probability of dying, 2th row is 1-2 year-old age cohort
+        death_prob <- as.numeric(matrix(life_table_data[2:100, "qx"]))
     } else {
         print("Using user-supplied death probabilities. Must be annual death probabilities for age 1, 2, ..., 100")
         # check length of death prob
-        if (length(death_prob) != 100){
-            stop("vector of death probabilities does not have length 100")
+        if (length(death_prob) != 99){
+            stop("vector of death probabilities does not have length 99")
         }
     }
     
-    names(death_prob) <- as.character(1:100)
+    names(death_prob) <- as.character(1:99)
     
     # number of age groups
     n_age <- length(all_ind)
