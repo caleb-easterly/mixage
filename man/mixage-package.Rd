@@ -24,11 +24,4 @@ where the weights are optional. If provided, they are passed directly to \code{l
 
 The function estimates the age mixing matrix for the user-provided data, analysis parameters, and age groups. See the function documentation (\code{?estimate_age_mixing}) for additional details.
 }
-\seealso{
-Useful links:
-\itemize{
-  \item \url{https://github.com/caleb-easterly/mixage}
-  \item Report bugs at \url{https://github.com/caleb-easterly/mixage/issues}
-}
 
-}

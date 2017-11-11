@@ -4,16 +4,26 @@
 \alias{define_age_group_matrix}
 \title{Create age mixing matrices for the desired age groups.}
 \usage{
-define_age_group_matrix(start_ages, max_age = 74)
+define_age_group_matrix(start_ages, max_age = 74, age_distribution = NULL)
 }
 \arguments{
 \item{start_ages}{A numeric vector, where the ith entry is the youngest age in the ith age group}
 
 \item{max_age}{The oldest age in the model population. The oldest age group will include the ages from \code{max(start_age)} to \code{max_age - 1}}
+
+\item{age_distribution}{A length 99 vector with the proportion of in the population who is ages 1,2,3,..., 99.}
 }
 \description{
 Uses the best estimates from A Journal Article, 2018, to define male and female age mixing matrices for the supplied age groups.
 }
 \details{
-TODO: allow user to provide age distribution, calculate probabilities using LOTP
+The function takes the best estimates from "A journal article, 2018" and adapts them to user-supplied age groups. 
+If a population other than the U.S. population is used, an age distribution for that population is needed.
+This is needed to 'average' probabilities within an age group, by using the law of total probability. 
+The probability of someone in age group \eqn{i} choosing someone in age group \eqn{j} is 
+\deqn{Pr(P = j | C = i) = \sum Pr(P = j | C = k) Pr(C = k) }
+where the sum is taken over \eqn{k} in the set of ages in age group \eqn{i}.
+The full population age distribution is used to calculate the probability that
+someone within age group \eqn{i} has age \eqn{k}.
 }
+
