@@ -1,33 +1,13 @@
-# define a list of age group indices, where each list entry is a vector of ages contained within that age group
-# @param start_ages
-# A numeric vector of the first age year contained within each age group. Ex: c(12, 16, 20)
-# 
-# @param max_age
-# The maximum age within the model population. Default is 74, so the last age group is (maximum start age) to (max_age - 1). 
-# @export
-def_age_group_list <- function(start_ages, max_age = 74){
-    #number of age groups
-    n_age <- length(start_ages)
-    
-    # define a list of indices containing ages in age groups
-    all_ind <- lapply(1:n_age,
-                      function(i) {
-                          start_ages[i] +
-                              0:(c(diff(start_ages) - 1, (max_age - 1) - start_ages[n_age])[i])
-                      }
-    ) 
-    return(all_ind)
-}
-
-
 #' calculate age mixing structures 
 #' 
 #' @description 
-#' DESCRIBE TRANSFORMATIONS HERE
+#' A function to estimate age mixing matrices for user-supplied data. Choose between 
+#' different distributions around mean partner age, and different variance models. See
+#' "Revisiting Assumptions about Age Preferences in Mathematical 
+#' Models of Sexually Transmitted Infection" (Easterly, et al., 2018) for details
+#' about the estimation procedures. For a function 
+#' to estimate the best mixing structure for your data, see \link[mixage]{best_age_mixing}
 #' 
-#' @param max_age
-#' The non-inclusive right-hand endpoint of the oldest age group within the model population.
-#' Default is 74, so if the oldest age group begins at 60, the age interval is 60-73. Must be less than or equal to 100. 
 #'
 #' @param choice_data
 #' a dataframe with chooser age, partner age, sex, and optional survey weights. 
@@ -45,17 +25,24 @@ def_age_group_list <- function(start_ages, max_age = 74){
 #' describes the transformation of the residuals for estimating the heteroscedastic variance. 
 #' Choose \code{linear}, \code{sqrt}, \code{log}, or \code{const}. 
 #'
-#' @param death_prob
-#' Length 100 vector. \code{death_prob[1]} is probability of dying in the next year for 1-year-old,
-#' \code{death_prob[12]} is for 12-year-old, and so on. If not supplied, default is taken from  2011 US life tables
+#' @param max_age
+#' The non-inclusive right-hand endpoint of the oldest age group within the model population.
+#' Default is 74, so if the oldest age group begins at 60, the age interval is 60-73. Must be less than or equal to 100. 
+#' 
+#' @param age_distribution
+#' Optional: a vector of length \code{length(seq(min(start_ages), max_age))},
+#' where the \code{i}th entry is the
+#' proportion of the model population with age \code{i}. This vector defines the proportion of the model population with every \emph{age}, not \emph{age group}. If not provided, the 2011 U.S.
+#' life tables are used to estimate the population age distribution. 
+#' 
 #' 
 #' @export
 estimate_age_mixing <- function(choice_data,
-                                max_age,
                                 start_ages, 
                                 distribution = c("gamma", "laplace", "normal"),
                                 variance_model = c("sqrt", "log", "linear", "const"),
-                                death_prob = NULL){
+                                max_age = 74,
+                                age_distribution = NULL){
     # define useful variables
     # a list where the ith entry is a vector with all ages contained in the ith age group
     indices <- def_age_group_list(start_ages, max_age)
@@ -94,8 +81,14 @@ estimate_age_mixing <- function(choice_data,
         weights <- NULL
     } 
     
+    # check that age_distribution is right length
+    if (length(age_distribution) != length(seq(min(start_ages), max_age)) &
+        !is.null(age_distribution)){
+        stop("age_distribution and min(start_ages):max_age must be the same length")
+    }
+    
     # calculate the mean age in each age group, using age distribution
-    mean_ages <- avg_group_age(age_group_list_indices = indices)
+    mean_ages <- avg_group_age(age_group_list_indices = indices, age_distribution)
     
     # mean chooser age in each group 
     mean_age_M_df <- data.frame("chsage" = mean_ages, "sex" = "Male")
@@ -236,6 +229,28 @@ estimate_age_mixing <- function(choice_data,
 subset_dat_age <- function(i, data, minAges, maxAges){
     subset(data, chsage >= minAges[i] & chsage <= maxAges[i])
 }
+
+# define a list of age group indices, where each list entry is a vector of ages contained within that age group
+# @param start_ages
+# A numeric vector of the first age year contained within each age group. Ex: c(12, 16, 20)
+# 
+# @param max_age
+# The maximum age within the model population. Default is 74, so the last age group is (maximum start age) to (max_age - 1). 
+def_age_group_list <- function(start_ages, max_age = 74){
+    #number of age groups
+    n_age <- length(start_ages)
+    
+    # define a list of indices containing ages in age groups
+    all_ind <- lapply(1:n_age,
+                      function(i) {
+                          start_ages[i] +
+                              0:(c(diff(start_ages) - 1, (max_age - 1) - start_ages[n_age])[i])
+                      }
+    ) 
+    return(all_ind)
+}
+
+
 
 # # try to transform response instead
 # pt_choice_all_response_transform <- function(indices,
