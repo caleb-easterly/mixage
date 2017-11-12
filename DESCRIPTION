@@ -5,7 +5,8 @@ Version: 1.0
 Date: 2017-10-28
 Author: Caleb Easterly, Fernando Alarid-Escudero
 Maintainer: Caleb Easterly, <easte080@umn.edu>
-Description: Functions for statistical analysis of age preference data from sexual behavior surveys. 
+Description: Functions for statistical analysis of age preference data from
+    sexual behavior surveys.
 URL: https://github.com/caleb-easterly/mixage
 BugReports: https://github.com/caleb-easterly/mixage/issues
 Encoding: UTF-8
