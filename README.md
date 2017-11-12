@@ -1,4 +1,5 @@
-This R package contains functions used in "Name of the HPV Modeling Paper", 2018 to estimate age mixing. To obtain it on your local R installation, install the `devtools` package and then run `devtools::install_github(caleb-easterly/mixage)`. 
+This R package contains functions used in "Revisiting Assumptions about Age Preferences in
+#' Mathematical Models of Sexually Transmitted Infection" (Easterly, et al., 2018) to estimate age mixing. To obtain it on your local R installation, install the `devtools` package and then run `devtools::install_github(caleb-easterly/mixage)`. 
 
 ## Age mixing: Natsal-3 data
 To use our estimates of age mixing with your own age groups, define a vector of the minimum age in each age group (age mixing is only supported for ages 12 and up):
