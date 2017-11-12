@@ -1,136 +1,37 @@
-This R package contains functions used in "Name of the HPV Modeling Paper", 2018. To obtain it on your local R installation, install the `devtools` package and then run `devtools::install_github(caleb-easterly/sfceHPV)`. 
+This R package contains functions used in "Name of the HPV Modeling Paper", 2018 to estimate age mixing. To obtain it on your local R installation, install the `devtools` package and then run `devtools::install_github(caleb-easterly/mixage)`. 
 
-## Steady-State Prevalence
-To estimate the steady-state prevalence from a model with the default parameters, no vaccination, and the empirical mixing structure, run the following code:
+## Age mixing: Natsal-3 data
+To use our estimates of age mixing with your own age groups, define a vector of the minimum age in each age group (age mixing is only supported for ages 12 and up):
 ```
-parms <- all_parameters()
-prev <- estimate_steady_state(parms = parms, mix = "emp", vacc_strategy = parms$phi0)
+> your_age_groups <- c(12, 20, 30, 40, 50, 60)
 ```
-
-The resulting variable `prev` is a matrix containing age- and gender-specific prevalence. To compare two vaccination strategies, run `estimate_steady_state()` with the two strategies. 
-
-## Cases of HPV
-To estimate cases of HPV over 50 years, comparing two vaccination strategies (`JAstratF_base` and `JAstratF_comp`), run the following code:
+Then, run `define_age_group_matrix()` with your age groups, the maximum age in your population (the max age must be 74 or below), and (optionally), a vector of length 99 with the age distribution from ages 1 to 99.
 ```
-parms <- all_parameters()
-cases_prevnt <- cases_prevented(parms,
-  base_vacc = parms$JAstratF_base,
-  addnl_vacc = parms$JAstratF_comp)
+> mixage <- define_age_group_matrix(your_age_groups, max_age = 74)
 ```
-
-The resulting variable, `cases_prevnt`, is a data frame containing the number of cases per person over 50 years for each age, gender, vaccination strategy, and mixing structure. 
-
-## Program Structure
-
-The three essential top-level functions are `all_parameters()`, `cases_prevented()` and `estimate_steady_state()`, which together call most of the other functions in the package. Here, we describe the structure of these functions.
-The symbol `->` indicates that the parent function calls the child function. The symbol `<-` indicates a return to the parent function, optionally followed by what is returned, named informally and incompletely to describe roughly what they are. Functions written in C++ are marked with a`*`.  
-
-### `all_parameters()`
-
+If an age distribution is not provided, the U.S. 2011 life tables are used to define an age distribution. The function returns a list of matrices 
 ```
-all_parameters()
-    -> age_specific_parameters()
-        -> calculate_age_distribution() # estimates the proportion of population in each age group
-            -> death_rate() # convert life tables to death rates
-                <- vector of death rates
-            -> transfer_rate() # calculate aging rate from death rates
-                <- aging rates
-            <- list(age_proportions, aging rate, death rate)
-        -> calculate_age_distribution() # estimate population proportion in each *year of age*
-            ** same as above **
-            <- list(age_proportions, aging rate, death rate)
-        -> estimate_spar() # estimate the sex partner acquisition rate for each age group
-            -> estimate_spar_prepare_data() # load spar data from private natsal dataframe
-                -> spar_all() # divide data for each age into high, medium, low sexual activity
-                <- spar data, divided into high, medium, low SA
-            -> estimate_spar_poisson_reg() # do regression on data to estimate spar
-            <- adjusted SPARs
-        -> pt_choice_all_choose_variance_model() # use regression to estimate age mixing
-            -> gam_param() # estimate shape and scale of Gamma distributions
-                <- shape, scale
-            -> laplace_mle() # estimate mean, variance of laplace distribution
-                <- best estimates
-            -> laplace_MOM() # convert mean, variance to location + scale
-                <- location, scale
-            <- age mixing matrices
-        <- list of all age-specific parameters
-    -> data_matrix_longform() # bin partnership data into age groups
-        <- data matrices with group-specific partnership data
-    -> calc_ap_eps() # estimate epsilon with maximum likelihood fit to data
-        -> optim(eps_mle_fast()) # calculate epsilons with MLE
-            -> eval_rho_ap() # calculate full A-P mixing matrix for given values of epsilon
-                -> sub_epsilon() # substitute values of epsilon into list of parameters
-                    <- new parameter list
-                -> lambda_all()* # function calculates force of infection, returns A-P matrices as side effect
-                    -> balance_spar() # balances the acquisition rates so all partnerships are 'realized'; called once for A-P, once for empirical
-                        <- balanced partnership rates
-                    <- A-P mixing matrices (among many other things)
-                <- A-P mixing matrices
-            -> calculate_ap_age_mixing_matrix() # calculate A-P *age* matrix from full A-P matrix
-                <- A-P age matrix
-            -> mixing_matrix_loglikelihood() # calculate log likelihood of data under age mixing matrix
-                <- (positive) log likelihood of data
-            <- best fit epsilons
-        
-        <- best fit age assortativity parameters
-    -> define_journal_article_vaccination_strategies()
-        -> def_vacc_strat() # define vaccination matrices based on a few probabilities; called several times
-            <- a vaccination matrix
-        <- vaccination strategies
-    <- all defined parameters
+> str(mixage)
+List of 2
+ $ MOME: num [1:6, 1:6] 0.9613 0.3045 0.0622 0.0242 0.0117 ...
+ $ FOME: num [1:6, 1:6] 0.62054 0.10251 0.03308 0.01485 0.00777 ...
 ```
 
-### `estimate_steady_state()`
+where `MOME` is the male age mixing matrix and `FOME` is the female age mixing matrix. The $i$th row of `FOME` is the partner age distribution for females in age group $i$, and `FOME[i, j]` is the probability that a female of age group `i` chooses a male partner in age group `j`. 
 
-```
-estimate_steady_state()
-    -> lsodar( hpv_model_function()* ) # solves system of ODEs in hpv_model_function()
-        -> lambda_all()* # calculate force of infection (lambda)
-            -> balance_spar() # balances the acquisition rates so all partnerships are 'realized'; called once for A-P, once for empirical
-                <- balanced partnership rates
-            <- age-, gender-, and sexual-activity-specific force of infection
-        <- matrix of prevalence at steady-state
-    -> combine_prevalence() # calculate age- and gender-specific prevalence from model output; averages over SA groups
-        <- age- and gender-specific prevalence
-```
+## Calculate age mixing with your data
 
-### `cases_prevented()`
-
+The other main functionality of the package is to estimate age mixing using your data. To use this function, your data must be in a dataframe with columns `chsage`, `ptage`, `sex`, and (optionally) `weights`, where each row is a partnership where the individual reporting the partnership (in a survey) has age `chsage` and the reported age of their partner is `ptage`. The variable `sex` should be coded as `M` and `F`. Assuming we have data stored in the variable `choice_data`, we can run the following:
 ```
-cases_prevented()
-    -> caseprev_base_vec() # run model to steady state
-        -> lsodar( hpv_model_function() )
-            ...etc...
-            <-
-        <- initial conditions for empirical mixing
-    -> caseprev_base_vec() # run model to steady state
-        -> lsodar( hpv_model_function() )
-            ...etc...
-            <-
-        <- initial conditions for A-P mixing
-    -> cases_cumulative()
-        -> lsoda ( hpv_model_function() )
-            ...etc...
-            <- 
-        <- empirical mixing; cases over 50 years under base vaccination
-    -> cases_cumulative()
-        -> lsoda ( hpv_model_function() )
-            ...etc...
-            <- 
-        <- A-P mixing; cases over 50 years under base vaccination
-    -> cases_cumulative()
-        -> lsoda ( hpv_model_function() )
-            ...etc...
-            <- 
-        <- empirical mixing; cases over 50 years under *comparison* vaccination plan
-    -> cases_cumulative()
-        -> lsoda ( hpv_model_function() )
-            ...etc...
-            <- 
-        <- A-P mixing; cases over 50 years under *comparison* vaccination plan
+estimates <- estimate_age_mixing(choice_data,
+    max_age = 74,
+    start_ages = start_ages, 
+    distribution = "normal",
+    variance_model = "const",
+    age_distribution = NULL)
 ```
 
-
+For details about all of the arguments mean, see `?estimate_age_mixing` once the package is installed. 
 
 
 ## Contact
