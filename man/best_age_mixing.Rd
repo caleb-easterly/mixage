@@ -9,4 +9,3 @@ best_age_mixing(mixing_data, start_ages, max_age = 74)
 \description{
 A convenience function - calculates the likelihood of observing the provided data under each mixing structure provided in \link[mixage]{estimate_age_mixing}
 }
-

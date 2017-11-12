@@ -25,4 +25,3 @@ The data used was from the  2010 - 2012 wave of the National Survey of Sexual At
 a national British survey.
 }
 \keyword{datasets}
-
