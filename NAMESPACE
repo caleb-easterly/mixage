@@ -3,5 +3,4 @@
 export(best_age_mixing)
 export(define_age_group_matrix)
 export(estimate_age_mixing)
-import(dplyr)
-import(extraDistr)
+importFrom(MASS,gamma.shape)

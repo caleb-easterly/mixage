@@ -13,6 +13,5 @@
 #'\item \link[mixage]{define_age_group_matrix}, to take the best age mixing estimates from "Revisiting Assumptions about Age Preferences in Mathematical 
 #' Models of Sexually Transmitted Infection" (Easterly, et al., 2018), and adapt them to your age groups and population age distribution. 
 #'}
-#' 
-#'@import extraDistr dplyr
+#' @importFrom MASS gamma.shape
 "_PACKAGE"
