@@ -22,11 +22,6 @@ Default is 74, so if the oldest age group begins at 60, the age interval is 60-7
 where the \code{i}th entry is the
 proportion of the model population with age \code{i}. This vector defines the proportion of the model population with every \emph{age}, not \emph{age group}. If not provided, the 2011 U.S.
 life tables are used to estimate the population age distribution.}
-
-\item{distribution}{Provide the distribution of the errors around the mean partner age. Choose from Gamma, Laplace, and Normal distributions.}
-
-\item{variance_model}{describes the transformation of the residuals for estimating the heteroscedastic variance. 
-Choose \code{linear}, \code{sqrt}, \code{log}, or \code{const}.}
 }
 \description{
 A convenience function - calculates the likelihood of observing the provided data under each mixing structure provided in \link[mixage]{estimate_age_mixing}. See \link{mixage}{estimate_age_mixing} for more details.

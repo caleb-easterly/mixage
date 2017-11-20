@@ -1,6 +1,7 @@
 #' Create age mixing matrices for the desired age groups. 
 #' 
-#' @description Uses the best estimates from A Journal Article, 2018, to define male and female age mixing matrices for the supplied age groups. 
+#' @description Uses the best estimates from "Revisiting Assumptions about Age Preferences in Mathematical 
+#' Models of Sexually Transmitted Infection" (Easterly, et al., 2018) to define male and female age mixing matrices for the supplied age groups. 
 #' 
 #' @param start_ages A numeric vector, where the ith entry is the youngest age in the ith age group
 #' @param max_age The oldest age in the model population. The oldest age group will include the ages from \code{max(start_age)} to \code{max_age - 1}

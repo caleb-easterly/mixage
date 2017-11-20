@@ -14,7 +14,8 @@ define_age_group_matrix(start_ages, max_age = 74, age_distribution = NULL)
 \item{age_distribution}{A length 99 vector with the proportion of in the population who is ages 1,2,3,..., 99.}
 }
 \description{
-Uses the best estimates from A Journal Article, 2018, to define male and female age mixing matrices for the supplied age groups.
+Uses the best estimates from "Revisiting Assumptions about Age Preferences in Mathematical 
+Models of Sexually Transmitted Infection" (Easterly, et al., 2018) to define male and female age mixing matrices for the supplied age groups.
 }
 \details{
 The function takes the best estimates from "A journal article, 2018" and adapts them to user-supplied age groups. 

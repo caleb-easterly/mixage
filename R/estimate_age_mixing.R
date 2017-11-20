@@ -1,8 +1,9 @@
-#' calculate age mixing structures 
+#' Calculate age mixing structures 
 #' 
 #' @description 
 #' A function to estimate age mixing matrices for user-supplied data. Choose between 
-#' different distributions around mean partner age, and different variance models. See
+#' different distributions around mean partner age (Normal or Gamma),
+#' and either a identity or log link for the Gamma distribution. See
 #' "Revisiting Assumptions about Age Preferences in Mathematical 
 #' Models of Sexually Transmitted Infection" (Easterly, et al., 2018) for details
 #' about the estimation procedures. For a function 
@@ -19,11 +20,12 @@
 #' If \code{start_ages} is \code{c(12, 20, 30)}, the age groups are 12-19, 20-29, and 30 to \code{max_age - 1}. 
 #' 
 #' @param distribution
-#' Provide the distribution of the errors around the mean partner age. Choose from Gamma, Laplace, and Normal distributions. 
-#' 
-#' @param variance_model
-#' describes the transformation of the residuals for estimating the heteroscedastic variance. 
-#' Choose \code{linear}, \code{sqrt}, \code{log}, or \code{const}. 
+#' Provide the distribution of the errors around the mean partner age.
+#' Choose from "gamma" or "normal" distributions.
+#'   
+#' @param link
+#' When \code{"gamma"} is chosen as the distribution, the link can be either \code{"identity"} or \code{"log"}.
+#' If the distribution is \code{"normal"}, this has no effect.
 #'
 #' @param max_age
 #' The non-inclusive right-hand endpoint of the oldest age group within the model population.
@@ -39,8 +41,8 @@
 #' @export
 estimate_age_mixing <- function(choice_data,
                                 start_ages, 
-                                distribution = c("gamma", "laplace", "normal"),
-                                variance_model = c("sqrt", "log", "linear", "const"),
+                                distribution = c("gamma", "normal"),
+                                link = c("identity", "log"),
                                 max_age = 74,
                                 age_distribution = NULL){
     # define useful variables
@@ -94,135 +96,89 @@ estimate_age_mixing <- function(choice_data,
     mean_age_M_df <- data.frame("chsage" = mean_ages, "sex" = "Male")
     mean_age_F_df <- data.frame("chsage" = mean_ages, "sex" = "Female")
     
-    # changed from male and female separate
-    ptlm <- lm(ptage ~ chsage + sex, data = pt, weights = weights) 
-
-    #predict m and f
-    Mpred <- predict(ptlm, newdata = mean_age_M_df)
-    Fpred <- predict(ptlm, newdata = mean_age_F_df)
-    
-    # predict constant variance
-    const_var <- 1/(nrow(pt) - 2) * sum(resid(ptlm)^2)
-    
-    # Greene's method (without log)
-    # variance calculation for modeled heteroscedasticity by age
-    
-    # calculate residuals
-    mod_resid <- resid(ptlm)
-    
-    #add residuals to data frame
-    pt$resid <- mod_resid
-    
-    ## Model the variance
-    variance_model = match.arg(variance_model)
-    if (variance_model == "sqrt"){
-        mod.var <- lm(sqrt(resid^2) ~ chsage + sex, data = pt, weights = weights)
-        # Recover desired variance for each level of x. This is what we need for MoM!
-        Mvar_reg <- (predict(mod.var, newdata = mean_age_M_df))^2
-        Fvar_reg <- (predict(mod.var, newdata = mean_age_F_df))^2
-    } 
-    if (variance_model == "log"){
-        mod.var <- lm(log(resid^2) ~ chsage + sex, data = pt, weights = weights)
-        # Recover desired variance for each level of x. This is what we need for MoM!
-        Mvar_reg <- exp(predict(mod.var, newdata = mean_age_M_df))
-        Fvar_reg <- exp(predict(mod.var, newdata = mean_age_F_df))
-    }
-    if (variance_model == "linear"){
-        mod.var <- lm(resid^2 ~ chsage + sex, data = pt, weights = weights)
-        # Recover desired variance for each level of x. This is what we need for MoM!
-        Mvar_reg <- predict(mod.var, newdata = mean_age_M_df)
-        Mvar_reg[which(Mvar_reg < 0)] <- min(Mvar_reg[which(Mvar_reg > 0)])
-        Fvar_reg <- predict(mod.var, newdata = mean_age_F_df)
-        Fvar_reg[which(Fvar_reg < 0)] <- min(Fvar_reg[which(Fvar_reg > 0)])
-    }
-    if (variance_model == "const") {
-        Mvar_reg <- rep(const_var, n_age)
-        Fvar_reg <- rep(const_var, n_age)
-    }
-    
-    # choose distribution
+    # choose distribution and link
     distribution <- match.arg(distribution)
+    link <- match.arg(link)
+    
+    if (distribution == "normal"){
+        # standard linear model
+        fit_lm <- lm(ptage ~ chsage + sex, data = pt, weights = weights) 
+        AIC <- AIC(fit_lm)
+        
+        #predict m and f
+        Mpred <- predict(fit_lm,
+                         newdata = mean_age_M_df,
+                         interval = "prediction")
+        Fpred <- predict(fit_lm,
+                         newdata = mean_age_F_df,
+                         interval = "prediction")
+        
+        MpredSD <- (Mpred[, "upr"] - Mpred[, "lwr"])/(1.96*2)
+        FpredSD <- (Fpred[, "upr"] - Fpred[, "lwr"])/(1.96*2)
+        
+    } else {
+        ### Generalized Linear model (gamma regression with identity link)
+        if (link == "identity") {
+            fit_glm <- glm(ptage ~ chsage + sex,
+                           family = Gamma(link = "identity"),
+                           weights = weights,
+                           data = pt)
+            AIC <- AIC(fit_glm)
+        } else {
+            fit_glm <- glm(ptage ~ chsage + sex,
+                           family = Gamma(link = "log"),
+                           weights = weights,
+                           data = pt)
+            AIC <- AIC(fit_glm)
+        }
+        mle_shape <- MASS::gamma.shape(fit_glm)
+        Mgampred <- predict(fit_glm,
+                           type = "response",
+                           dispersion = 1/mle_shape$alpha, 
+                           newdata = mean_age_M_df)
+        Fgampred <- predict(fit_glm,
+                            type = "response",
+                            dispersion = 1/mle_shape$alpha, 
+                            newdata = mean_age_F_df)
+    }
+    
     
     #set up and fill MOME and FOME
     #initialize MOME&FOME
     MOME <- FOME <- matrix(0, n_age, n_age)
     # right ends of the age intervals
-    high_age <- start_ages + c(diff(start_ages), 74 - max(start_ages))
+    high_age <- start_ages + c(diff(start_ages), max_age - max(start_ages))
     temp_start_ages <- start_ages
     temp_start_ages[1] <- 0 #theoretical lowest bound
     
     ## Gamma
     if (distribution == "gamma"){
-        grp_gam <- matrix(0, nrow = n_age, ncol = 4)
-        colnames(grp_gam) <- c("Mshape", "Mrate", "Fshape", "Frate")
-        for (i in 1:n_age){
-            grp_gam[i, ] <- c(gam_param(Mpred[i], Mvar_reg[i]),
-                              gam_param(Fpred[i], Fvar_reg[i]))
-        }
-    
         #evaluate gamma distribution at 12 to 74 years, using
         #differences in cumulative distribution function
         for (i in 1:length(start_ages)){
-            Mreg_raw_probs <- pgamma(high_age, shape = grp_gam[i, 1], rate = grp_gam[i, 2]) -
-                pgamma(temp_start_ages, shape = grp_gam[i, 1], rate = grp_gam[i, 2])
-            Freg_raw_probs <- pgamma(high_age, shape = grp_gam[i, 3], rate = grp_gam[i, 4]) -
-                pgamma(temp_start_ages, shape = grp_gam[i, 3], rate = grp_gam[i, 4])
+            Mreg_raw_probs <- pgamma(high_age, shape = mle_shape$alpha, rate = mle_shape$alpha/Mgampred[i]) -
+                pgamma(temp_start_ages, shape = mle_shape$alpha, rate = mle_shape$alpha/Mgampred[i])
+            Freg_raw_probs <- pgamma(high_age, shape = mle_shape$alpha, rate = mle_shape$alpha/Fgampred[i]) -
+                pgamma(temp_start_ages, shape = mle_shape$alpha, rate = mle_shape$alpha/Fgampred[i])
             MOME[i, ] <- Mreg_raw_probs / sum(Mreg_raw_probs)
             FOME[i, ] <- Freg_raw_probs / sum(Freg_raw_probs)
         }
     }
     
-    
-    ### Laplace
-    if (distribution == "laplace") {
-        # use regression predictions to get laplace estimates
-        # transpose makes same dimension/format as gamma parameters
-        lap_reg <- t(
-            sapply(1:n_age, 
-                   function(x) {
-                        c(
-                            laplace_MOM(Mpred[x], Mvar_reg[x]),
-                            laplace_MOM(Fpred[x], Fvar_reg[x])
-                        )
-                    }
-                  )
-        )
-        
-        for (i in 1:length(start_ages)){
-            Mreg_raw_probs_lap <- plaplace(high_age, mu = lap_reg[i, 1],
-                                           sigma = lap_reg[i, 2]) -
-                plaplace(temp_start_ages, mu = lap_reg[i, 1],
-                         sigma = lap_reg[i, 2])
-            Freg_raw_probs_lap <- plaplace(high_age, mu = lap_reg[i, 3],
-                                           sigma = lap_reg[i, 4]) -
-                plaplace(temp_start_ages, mu = lap_reg[i, 3],
-                         sigma = lap_reg[i, 4])
-            MOME[i, ] <- Mreg_raw_probs_lap / sum(Mreg_raw_probs_lap)
-            FOME[i, ] <- Freg_raw_probs_lap / sum(Freg_raw_probs_lap)
-        }
-    }
-    
-    
     # Normal distribution
     if (distribution == "normal") {
         for (i in 1:length(start_ages)){
-            Mreg_raw_probs_norm <- pnorm(high_age, mean = Mpred[i], sd = sqrt(Mvar_reg[i])) -
-                pnorm(temp_start_ages,  mean = Mpred[i], sd = sqrt(Mvar_reg[i]))
-            Freg_raw_probs_norm <-  pnorm(high_age, mean = Fpred[i], sd = sqrt(Fvar_reg[i])) -
-                pnorm(temp_start_ages,  mean = Fpred[i], sd = sqrt(Fvar_reg[i]))
+            Mreg_raw_probs_norm <- pnorm(high_age, mean = Mpred[i], sd = MpredSD[i]) -
+                pnorm(temp_start_ages,  mean = Mpred[i], sd = MpredSD[i])
+            Freg_raw_probs_norm <-  pnorm(high_age, mean = Fpred[i], sd = FpredSD[i]) -
+                pnorm(temp_start_ages,  mean = Fpred[i], sd = FpredSD[i])
             
             MOME[i, ] <- Mreg_raw_probs_norm / sum(Mreg_raw_probs_norm)
             FOME[i, ] <- Freg_raw_probs_norm / sum(Freg_raw_probs_norm)
         }
         
     }
-    
-    # calculate log likelihood of data given assumption
-    data_matrix <- data_matrix_longform(choice_data, indices)
-    loglike <- mixing_matrix_negloglikelihood(list(MOME, FOME),
-                                              data_matrix$Mcounts,
-                                              data_matrix$Fcounts)
-    return(list("MOME" = MOME, "FOME" = FOME, "neg_log_likelihood" = loglike))
+    return(list("MOME" = MOME, "FOME" = FOME, "AIC" = AIC))
 }
 
 

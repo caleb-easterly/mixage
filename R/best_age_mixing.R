@@ -15,12 +15,6 @@
 #' vector of the youngest ages included in each age group. 
 #' If \code{start_ages} is \code{c(12, 20, 30)}, the age groups are 12-19, 20-29, and 30 to \code{max_age - 1}. 
 #' 
-#' @param distribution
-#' Provide the distribution of the errors around the mean partner age. Choose from Gamma, Laplace, and Normal distributions. 
-#' 
-#' @param variance_model
-#' describes the transformation of the residuals for estimating the heteroscedastic variance. 
-#' Choose \code{linear}, \code{sqrt}, \code{log}, or \code{const}. 
 #'
 #' @param age_distribution
 #' Optional: a vector of length \code{length(seq(min(start_ages), max_age))},
@@ -34,23 +28,22 @@ best_age_mixing <- function(choice_data,
                             start_ages,
                             max_age = 74,
                             age_distribution = NULL) {
-    dists <- c("normal", "laplace", "gamma")
-    vars <- c("const", "log", "linear", "sqrt")
-    dv <- as.matrix(expand.grid(dists, vars))
-    colnames(dv) <- c("distribution", "variance")
+    dv <- matrix(c("normal", rep("gamma", 2),
+                 "identity", "log", "identity"), nrow = 3)
+
     mixing_mats <- vector(length = nrow(dv), mode = "list")
-    nll <- rep(0, nrow(dv))
+    AIC <- rep(0, nrow(dv))
     for (i in 1:nrow(dv)) {
         mixing_mats[[i]] <- estimate_age_mixing(choice_data = choice_data,
                                            start_ages = start_ages,
                                            distribution = dv[i, 1],
-                                           variance_model = dv[i, 2],
+                                           link = dv[i, 2],
                                            max_age = max_age,
                                            age_distribution = age_distribution)
-        nll[i] <- mixing_mats[[i]]$neg_log_likelihood
+        AIC[i] <- mixing_mats[[i]]$AIC
     }
-    best_structure = mixing_mats[[which.min(nll)]]
-    return(list("all_NLL" = data.frame(dv, nll),
+    best_structure = mixing_mats[[which.min(AIC)]]
+    return(list("all_AIC" = data.frame(dv, AIC),
            "best_structure" = best_structure))
 }
     

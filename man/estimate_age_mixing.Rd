@@ -2,11 +2,11 @@
 % Please edit documentation in R/estimate_age_mixing.R
 \name{estimate_age_mixing}
 \alias{estimate_age_mixing}
-\title{calculate age mixing structures}
+\title{Calculate age mixing structures}
 \usage{
 estimate_age_mixing(choice_data, start_ages, distribution = c("gamma",
-  "laplace", "normal"), variance_model = c("sqrt", "log", "linear", "const"),
-  max_age = 74, age_distribution = NULL)
+  "normal"), link = c("identity", "log"), max_age = 74,
+  age_distribution = NULL)
 }
 \arguments{
 \item{choice_data}{a dataframe with chooser age, partner age, sex, and optional survey weights. 
@@ -16,10 +16,11 @@ Sex must be coded as "Male" and "Female"}
 \item{start_ages}{vector of the youngest ages included in each age group. 
 If \code{start_ages} is \code{c(12, 20, 30)}, the age groups are 12-19, 20-29, and 30 to \code{max_age - 1}.}
 
-\item{distribution}{Provide the distribution of the errors around the mean partner age. Choose from Gamma, Laplace, and Normal distributions.}
+\item{distribution}{Provide the distribution of the errors around the mean partner age.
+Choose from "gamma" or "normal" distributions.}
 
-\item{variance_model}{describes the transformation of the residuals for estimating the heteroscedastic variance. 
-Choose \code{linear}, \code{sqrt}, \code{log}, or \code{const}.}
+\item{link}{When \code{"gamma"} is chosen as the distribution, the link can be either \code{"identity"} or \code{"log"}.
+If the distribution is \code{"normal"}, this has no effect.}
 
 \item{max_age}{The non-inclusive right-hand endpoint of the oldest age group within the model population.
 Default is 74, so if the oldest age group begins at 60, the age interval is 60-73. Must be less than or equal to 100.}
@@ -31,7 +32,8 @@ life tables are used to estimate the population age distribution.}
 }
 \description{
 A function to estimate age mixing matrices for user-supplied data. Choose between 
-different distributions around mean partner age, and different variance models. See
+different distributions around mean partner age (Normal or Gamma),
+and either a identity or log link for the Gamma distribution. See
 "Revisiting Assumptions about Age Preferences in Mathematical 
 Models of Sexually Transmitted Infection" (Easterly, et al., 2018) for details
 about the estimation procedures. For a function 
