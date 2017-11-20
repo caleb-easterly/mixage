@@ -30,6 +30,10 @@ where the \code{i}th entry is the
 proportion of the model population with age \code{i}. This vector defines the proportion of the model population with every \emph{age}, not \emph{age group}. If not provided, the 2011 U.S.
 life tables are used to estimate the population age distribution.}
 }
+\value{
+A list, where MOME is the male age mixing matrix, FOME is the female age mixing matrix,
+and AIC is the AIC of the estimated statistical model.
+}
 \description{
 A function to estimate age mixing matrices for user-supplied data. Choose between 
 different distributions around mean partner age (Normal or Gamma),
@@ -38,4 +42,11 @@ and either a identity or log link for the Gamma distribution. See
 Models of Sexually Transmitted Infection" (Easterly, et al., 2018) for details
 about the estimation procedures. For a function 
 to estimate the best mixing structure for your data, see \link[mixage]{best_age_mixing}
+}
+\examples{
+load("mixage_sample_data")
+agemix <- estimate_age_mixing(mixage_sample_data, start_ages = seq(12, 72, by = 2),
+    max_age = 74)
+ 
+
 }

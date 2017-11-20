@@ -37,6 +37,14 @@
 #' proportion of the model population with age \code{i}. This vector defines the proportion of the model population with every \emph{age}, not \emph{age group}. If not provided, the 2011 U.S.
 #' life tables are used to estimate the population age distribution. 
 #' 
+#' @return A list, where MOME is the male age mixing matrix, FOME is the female age mixing matrix,
+#' and AIC is the AIC of the estimated statistical model. 
+#' 
+#' @examples
+#' load("mixage_sample_data")
+#' agemix <- estimate_age_mixing(mixage_sample_data, start_ages = seq(12, 72, by = 2),
+#'     max_age = 74)
+#'  
 #' 
 #' @export
 estimate_age_mixing <- function(choice_data,
