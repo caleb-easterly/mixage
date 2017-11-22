@@ -111,7 +111,9 @@ estimate_age_mixing <- function(choice_data,
     
     if (distribution == "normal"){
         # standard linear model
-        fit_lm <- lm(ptage ~ chsage + sex, data = pt, weights = weights) 
+        fit_lm <- lm(ptage ~ chsage + sex, 
+                     weights = weights,
+                     data = pt) 
         AIC <- AIC(fit_lm)
         
         #predict m and f
