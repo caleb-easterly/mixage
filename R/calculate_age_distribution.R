@@ -9,33 +9,45 @@
 calculate_age_distribution <- function(all_ind, death_prob = NULL){
     # calculate start ages from list
     start_ages <- sapply(all_ind, min)
+    n_age <- length(all_ind)
     
     # if user does not provide death rates, use built in (us life tables)
     if (is.null(death_prob)){
         # import life-table data
-        data("life_table_data")
+        # probabilities of death for age 1 to 99
+        # created so that 12th entry is age 12 to 13, for example
+
+        #probabilities of death for age 1 to 100
+        #created so that 12th entry is age 12 to 13
+        mprob <- as.numeric(uk_life_table$mxM[-1])
+        fprob <- as.numeric(uk_life_table$mxF[-1])
         
-        #probabilities of death for age 1 to 99
-        #created so that 12th entry is age 12 to 13, for example
-        #2nd column is probability of dying, 2th row is 1-2 year-old age cohort
-        death_prob <- as.numeric(matrix(life_table_data[2:100, "qx"]))
+        ### convert probabilities of death to rates
+        #create vector of death rates, mu
+        muM <- death_rate(death_prob = mprob, indices = all_ind)
+        muF <- death_rate(death_prob = fprob, indices = all_ind)
+        
+        # get the average of male and female rates
+        mu <- rowMeans(cbind(muM, muF))
+        
     } else {
         print("Using user-supplied death probabilities. Must be annual death probabilities for age 1, 2, ..., 100")
         # check length of death prob
         if (length(death_prob) != 99){
             stop("vector of death probabilities does not have length 99")
         }
+        names(death_prob) <- as.character(1:99)
+        
+        # number of age groups
+        n_age <- length(all_ind)
+        
+        ### convert probabilities of death to rates
+        #create vector of death rates, mu
+        mu <- death_rate(death_prob = death_prob, indices = all_ind)
+        
     }
     
-    names(death_prob) <- as.character(1:99)
-    
-    # number of age groups
-    n_age <- length(all_ind)
-    
-    ### convert probabilities of death to rates
-    #create vector of death rates, mu
-    mu <- death_rate(death_prob = death_prob, indices = all_ind)
-    
+
     ## aging rate calculations ####
     
     #calculate bands for aging calculation

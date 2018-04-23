@@ -9,7 +9,7 @@
 #' 
 #' @details 
 #' 
-#' The function takes the best estimates from "A journal article, 2018" and adapts them to user-supplied age groups. 
+#' The function takes the best estimates from "Revisiting Assumptions about Age Preferences in Mathematical Models of STIs" and adapts them to user-supplied age groups. 
 #' If a population other than the U.S. population is used, an age distribution for that population is needed.
 #' This is needed to 'average' probabilities within an age group, by using the law of total probability. 
 #' The probability of someone in age group \eqn{i} choosing someone in age group \eqn{j} is 
@@ -30,11 +30,8 @@ define_age_group_matrix <- function(start_ages,
     
     # if age distribution is null, bring in us life table data
     if (is.null(age_distribution)){
-        data('life_table_data')
         age_distribution <- calculate_age_distribution(1:99)$age_prop
-    } else {
-        life_table_data <- age_distribution
-    }
+    } 
     
     data("natsal_estimates")
     n_age <- length(start_ages)

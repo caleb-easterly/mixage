@@ -18,7 +18,7 @@ Uses the best estimates from "Revisiting Assumptions about Age Preferences in Ma
 Models of Sexually Transmitted Infection" (Easterly, et al., 2018) to define male and female age mixing matrices for the supplied age groups.
 }
 \details{
-The function takes the best estimates from "A journal article, 2018" and adapts them to user-supplied age groups. 
+The function takes the best estimates from "Revisiting Assumptions about Age Preferences in Mathematical Models of STIs" and adapts them to user-supplied age groups. 
 If a population other than the U.S. population is used, an age distribution for that population is needed.
 This is needed to 'average' probabilities within an age group, by using the law of total probability. 
 The probability of someone in age group \eqn{i} choosing someone in age group \eqn{j} is 
