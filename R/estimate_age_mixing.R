@@ -3,7 +3,7 @@
 #' @description 
 #' A function to estimate age mixing matrices for user-supplied data. Choose between 
 #' different distributions around mean partner age (Normal or Gamma),
-#' and either a identity or log link for the Gamma distribution. See
+#' and either an identity or log link for the Gamma distribution. See
 #' "Revisiting Assumptions about Age Preferences in Mathematical 
 #' Models of Sexually Transmitted Infection" (Easterly, et al., 2018) for details
 #' about the estimation procedures. For a function 
@@ -42,8 +42,9 @@
 #' 
 #' @examples
 #' load("mixage_sample_data")
-#' agemix <- estimate_age_mixing(mixage_sample_data, start_ages = seq(12, 72, by = 2),
-#'     max_age = 74)
+#' agemix <- estimate_age_mixing(mixage_sample_data, 
+#'           start_ages = seq(12, 72, by = 2),
+#'           max_age = 74)
 #'  
 #' 
 #' @export
@@ -110,7 +111,9 @@ estimate_age_mixing <- function(choice_data,
     
     if (distribution == "normal"){
         # standard linear model
-        fit_lm <- lm(ptage ~ chsage + sex, data = pt, weights = weights) 
+        fit_lm <- lm(ptage ~ chsage + sex, 
+                     weights = weights,
+                     data = pt) 
         AIC <- AIC(fit_lm)
         
         #predict m and f
