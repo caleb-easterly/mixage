@@ -11,7 +11,7 @@ calculate_age_distribution <- function(all_ind, death_prob = NULL){
     start_ages <- sapply(all_ind, min)
     n_age <- length(all_ind)
     
-    # if user does not provide death rates, use built in (us life tables)
+    # if user does not provide death rates, use built in (uk life tables)
     if (is.null(death_prob)){
         # import life-table data
         # probabilities of death for age 1 to 99

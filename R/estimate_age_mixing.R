@@ -34,15 +34,14 @@
 #' @param age_distribution
 #' Optional: a vector of length \code{length(seq(min(start_ages), max_age))},
 #' where the \code{i}th entry is the
-#' proportion of the model population with age \code{i}. This vector defines the proportion of the model population with every \emph{age}, not \emph{age group}. If not provided, the 2011 U.S.
-#' life tables are used to estimate the population age distribution. 
+#' proportion of the model population with age \code{i}. This vector defines the proportion of the model population with every \emph{age}, not \emph{age group}. If not provided, the 2010-2012 U.K.
+#' life tables are used to estimate the population age distribution (see \link[mixage]{uk_life_table}). 
 #' 
-#' @return A list, where MOME is the male age mixing matrix, FOME is the female age mixing matrix,
-#' and AIC is the AIC of the estimated statistical model. 
+#' @return A list, where MOME is the male age mixing matrix, FOME is the female age mixing matrix, AIC is the AIC of the estimated statistical model, and \code{fits} has information on the fit (can be used for sensitivity analysis). 
 #' 
 #' @examples
-#' load("mixage_sample_data")
-#' agemix <- estimate_age_mixing(mixage_sample_data, 
+#' data("mixage_sample_data")
+#' agemix <- estimate_age_mixing(choice_data = mixage_sample_data, 
 #'           start_ages = seq(12, 72, by = 2),
 #'           max_age = 74)
 #'  
@@ -54,15 +53,6 @@ estimate_age_mixing <- function(choice_data,
                                 link = c("identity", "log"),
                                 max_age = 74,
                                 age_distribution = NULL){
-    # define useful variables
-    # a list where the ith entry is a vector with all ages contained in the ith age group
-    indices <- def_age_group_list(start_ages, max_age)
-    
-    # number of age groups
-    n_age <- length(start_ages)
-    
-    # define data
-    pt <- choice_data
 
     # run checks on data - correct column names, etc. 
     # data column names
@@ -87,10 +77,10 @@ estimate_age_mixing <- function(choice_data,
         stop("choice_data$sex must be coded as 'Male' and 'Female'")
     }
     
-    # if weights not provided, set to null
-    if (is.null(choice_data$weights)){
-        weights <- NULL
-    } 
+    # # if weights not provided, set to null
+    # if (is.null(choice_data$weights)){
+    #     weights <- NULL
+    # } 
     
     # check that age_distribution is right length
     if (length(age_distribution) != length(seq(min(start_ages), max_age)) &
@@ -98,62 +88,31 @@ estimate_age_mixing <- function(choice_data,
         stop("age_distribution and min(start_ages):max_age must be the same length")
     }
     
-    # calculate the mean age in each age group, using age distribution
-    mean_ages <- avg_group_age(age_group_list_indices = indices, age_distribution)
-    
-    # mean chooser age in each group 
-    mean_age_M_df <- data.frame("chsage" = mean_ages, "sex" = "Male")
-    mean_age_F_df <- data.frame("chsage" = mean_ages, "sex" = "Female")
-    
-    # choose distribution and link
+    # assign distribution
     distribution <- match.arg(distribution)
+    
+    # assign link
     link <- match.arg(link)
     
-    if (distribution == "normal"){
-        # standard linear model
-        fit_lm <- lm(ptage ~ chsage + sex, 
-                     weights = weights,
-                     data = pt) 
-        AIC <- AIC(fit_lm)
-        
-        #predict m and f
-        Mpred <- predict(fit_lm,
-                         newdata = mean_age_M_df,
-                         interval = "prediction")
-        Fpred <- predict(fit_lm,
-                         newdata = mean_age_F_df,
-                         interval = "prediction")
-        
-        MpredSD <- (Mpred[, "upr"] - Mpred[, "lwr"])/(1.96*2)
-        FpredSD <- (Fpred[, "upr"] - Fpred[, "lwr"])/(1.96*2)
-        
-    } else {
-        ### Generalized Linear model (gamma regression with identity link)
-        if (link == "identity") {
-            fit_glm <- glm(ptage ~ chsage + sex,
-                           family = Gamma(link = "identity"),
-                           weights = weights,
-                           data = pt)
-            AIC <- AIC(fit_glm)
-        } else {
-            fit_glm <- glm(ptage ~ chsage + sex,
-                           family = Gamma(link = "log"),
-                           weights = weights,
-                           data = pt)
-            AIC <- AIC(fit_glm)
-        }
-        mle_shape <- MASS::gamma.shape(fit_glm)
-        Mgampred <- predict(fit_glm,
-                           type = "response",
-                           dispersion = 1/mle_shape$alpha, 
-                           newdata = mean_age_M_df)
-        Fgampred <- predict(fit_glm,
-                            type = "response",
-                            dispersion = 1/mle_shape$alpha, 
-                            newdata = mean_age_F_df)
-    }
+    # fit the regression model
+    fits <- fit_age_mixing_model(choice_data,
+                                 distribution,
+                                 link,
+                                 start_ages,
+                                 max_age,
+                                 age_distribution)
     
-    
+    # fill MOME and FOME with results
+    omegas <- fill_omegas(distribution, fits, start_ages, max_age)
+
+    return(list("MOME" = omegas$MOME,
+                "FOME" = omegas$FOME,
+                "AIC" = fits$AIC,
+                "fits" = fits))
+}
+
+fill_omegas <- function(distribution, fits, start_ages, max_age){
+    n_age <- length(start_ages)
     #set up and fill MOME and FOME
     #initialize MOME&FOME
     MOME <- FOME <- matrix(0, n_age, n_age)
@@ -167,10 +126,14 @@ estimate_age_mixing <- function(choice_data,
         #evaluate gamma distribution at 12 to 74 years, using
         #differences in cumulative distribution function
         for (i in 1:length(start_ages)){
-            Mreg_raw_probs <- pgamma(high_age, shape = mle_shape$alpha, rate = mle_shape$alpha/Mgampred[i]) -
-                pgamma(temp_start_ages, shape = mle_shape$alpha, rate = mle_shape$alpha/Mgampred[i])
-            Freg_raw_probs <- pgamma(high_age, shape = mle_shape$alpha, rate = mle_shape$alpha/Fgampred[i]) -
-                pgamma(temp_start_ages, shape = mle_shape$alpha, rate = mle_shape$alpha/Fgampred[i])
+            Mreg_raw_probs <- pgamma(high_age, shape = fits$mle_shape$alpha,
+                                     rate = fits$mle_shape$alpha/fits$Mpred[i]) - 
+                pgamma(temp_start_ages, shape = fits$mle_shape$alpha,
+                       rate = fits$mle_shape$alpha/fits$Mpred[i])
+            Freg_raw_probs <- pgamma(high_age, shape = fits$mle_shape$alpha,
+                                     rate = fits$mle_shape$alpha/fits$Fpred[i]) - 
+                pgamma(temp_start_ages, shape = fits$mle_shape$alpha,
+                       rate = fits$mle_shape$alpha/fits$Fpred[i])
             MOME[i, ] <- Mreg_raw_probs / sum(Mreg_raw_probs)
             FOME[i, ] <- Freg_raw_probs / sum(Freg_raw_probs)
         }
@@ -179,22 +142,20 @@ estimate_age_mixing <- function(choice_data,
     # Normal distribution
     if (distribution == "normal") {
         for (i in 1:length(start_ages)){
-            Mreg_raw_probs_norm <- pnorm(high_age, mean = Mpred[i], sd = MpredSD[i]) -
-                pnorm(temp_start_ages,  mean = Mpred[i], sd = MpredSD[i])
-            Freg_raw_probs_norm <-  pnorm(high_age, mean = Fpred[i], sd = FpredSD[i]) -
-                pnorm(temp_start_ages,  mean = Fpred[i], sd = FpredSD[i])
+            Mreg_raw_probs_norm <- pnorm(high_age, mean = fits$Mpred[i],
+                                         sd = fits$MpredSD[i]) - 
+                pnorm(temp_start_ages, mean = fits$Mpred[i], sd = fits$MpredSD[i])
+            Freg_raw_probs_norm <-  pnorm(high_age, mean = fits$Fpred[i],
+                                          sd = fits$FpredSD[i]) -
+                pnorm(temp_start_ages,  mean = fits$Fpred[i], sd = fits$FpredSD[i])
             
             MOME[i, ] <- Mreg_raw_probs_norm / sum(Mreg_raw_probs_norm)
             FOME[i, ] <- Freg_raw_probs_norm / sum(Freg_raw_probs_norm)
         }
         
     }
-    return(list("MOME" = MOME, "FOME" = FOME, "AIC" = AIC))
-}
-
-
-subset_dat_age <- function(i, data, minAges, maxAges){
-    subset(data, chsage >= minAges[i] & chsage <= maxAges[i])
+    
+    return(list("MOME" = MOME, "FOME" = FOME))
 }
 
 # define a list of age group indices, where each list entry is a vector of ages contained within that age group
