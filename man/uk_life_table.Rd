@@ -6,7 +6,7 @@
 \title{Life table data from UK, 2010 - 2012}
 \format{An object of class \code{data.frame} with 101 rows and 11 columns.}
 \source{
-https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/lifeexpectancies/datasets/nationallifetablesunitedkingdomreferencetables
+\url{https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/lifeexpectancies/datasets/nationallifetablesunitedkingdomreferencetables}
 }
 \usage{
 uk_life_table
