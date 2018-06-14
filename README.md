@@ -31,6 +31,8 @@ estimates <- estimate_age_mixing(mixage_sample_data,
     distribution = "normal")
 ```
 
+For more details about the arguments, see `?estimate_age_mixing` once the package is installed. 
+
 ## Best age mixing for your data
 
 Finally, we can evaluate age mixing models using the Akaike information criterion for any given dataset, using `best_age_mixing()`. This function calculates the best model (with the lowest AIC), then returns it. 
@@ -52,9 +54,6 @@ The result is:
 ```
 
 This is reassuring, as the data were sampled from a normal distribution (see the [data creation file](R/create_sample_data.R))
-
-For more details about the arguments, see `?estimate_age_mixing` once the package is installed. 
-
 
 ## Contact
 Developer and Maintainer: Caleb Easterly (easte080@umn.edu)
