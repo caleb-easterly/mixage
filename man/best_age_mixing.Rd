@@ -23,6 +23,12 @@ where the \code{i}th entry is the
 proportion of the model population with age \code{i}. This vector defines the proportion of the model population with every \emph{age}, not \emph{age group}. If not provided, the 2011 U.S.
 life tables are used to estimate the population age distribution.}
 }
+\value{
+A list with the following elements:\enumerate{
+\item \code{all_AIC}: the Akaike information criterion for each model
+\item \code{best_structure}: the best-fitting model
+}
+}
 \description{
 A convenience function - calculates the likelihood of observing the provided data under each mixing structure provided in \link[mixage]{estimate_age_mixing}. See \link{mixage}{estimate_age_mixing} for more details.
 }

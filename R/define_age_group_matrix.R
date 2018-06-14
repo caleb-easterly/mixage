@@ -18,6 +18,8 @@
 #' The full population age distribution is used to calculate the probability that
 #' someone within age group \eqn{i} has age \eqn{k}.
 #' 
+#' @return A list with the elements \code{MOME} and \code{FOME} (male and female 'omega'), both matrices with a row and column for each age group. The entry MOME[i, j] is the probability that a male in age group i chooses a female of age group j as a partner.
+#' 
 #' @export
 define_age_group_matrix <- function(start_ages,
                                     max_age = 74,
@@ -28,12 +30,14 @@ define_age_group_matrix <- function(start_ages,
     # define the list of age group vectors
     age_group_list <- def_age_group_list(start_ages, max_age)
     
-    # if age distribution is null, bring in us life table data
+    # define minimum and max model ages (start age of oldest model group)
+    min_age <- min(start_ages)
+    max_model_age <- max(start_ages)
+    # if age distribution is null, bring in uk life table data
     if (is.null(age_distribution)){
-        age_distribution <- calculate_age_distribution(1:99)$age_prop
+        age_distribution <- calculate_single_year_age_distribution(min_age, max_model_age)
     } 
     
-    data("natsal_estimates")
     n_age <- length(start_ages)
     MOME <- FOME <- matrix(0, n_age, n_age)
     for (i in 1:n_age){

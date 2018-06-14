@@ -27,7 +27,7 @@ Default is 74, so if the oldest age group begins at 60, the age interval is 60-7
 
 \item{age_distribution}{Optional: a vector of length \code{length(seq(min(start_ages), max_age))},
 where the \code{i}th entry is the
-proportion of the model population with age \code{i}. This vector defines the proportion of the model population with every \emph{age}, not \emph{age group}. If not provided, the 2010-2012 U.K.
+proportion of the model population with age \code{i + min(start_ages) - 1} - that is, the first entry is \code{min(start_ages)}, and the second entry is \code{min(start_ages) + 1}. This vector defines the proportion of the model population with every \emph{age}, not \emph{age group}. If not provided, the 2010-2012 U.K.
 life tables are used to estimate the population age distribution (see \link[mixage]{uk_life_table}).}
 }
 \value{

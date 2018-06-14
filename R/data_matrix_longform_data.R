@@ -9,6 +9,11 @@
 # @param indices a list of vectors, where the ith list entry 
 # is a vector of ages in that age group
 # 
+# @return A list with the following elements:
+# - Mcounts,Fcounts: matrices of dim n_age by n_age, with the number of reported partnerships for each
+#       age pairing
+# - MOMEdat,FOMEdat: same as the counts, but the rows are normalized to sum to 1
+# 
 # @export
 data_matrix_longform <- function(choice_data, indices){
   n_age <- length(indices)

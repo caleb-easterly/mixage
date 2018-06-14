@@ -1,4 +1,9 @@
 # estimate mean age in each group
+# @param age_group_list_indices 
+# a list of vectors, with the ith vector containing the ages in the ith age group
+# @param full_age_distribution
+# proportion of the population with each (single-year) age
+# if not provided, is calculated from U.K. life tables
 avg_group_age <- function(age_group_list_indices, full_age_distribution = NULL) {
   n_age <- length(age_group_list_indices)
   mean_ages <- vector(length = n_age)
@@ -7,16 +12,16 @@ avg_group_age <- function(age_group_list_indices, full_age_distribution = NULL) 
   min_age <- min(unlist(age_group_list_indices))
   
   # maximum age that is modeled
-  max_age <- max(unlist(age_group_list_indices))
+  max_model_age <- max(unlist(age_group_list_indices))
   
   # calculate full age distribution for all ages in population
-  all_ages <- as.list(seq(min_age, max_age))
   
   if (is.null(full_age_distribution)){
-      full_age_distribution <- calculate_age_distribution(all_ages)$age_prop
+      full_age_distribution <- calculate_single_year_age_distribution(min_age, max_model_age)
   }
 
-  # for proper indexing, subtract (min_age - 1) from age group indices to make min_age into 1
+  # for proper indexing, subtract (min_age - 1) from
+  # age group indices to make min_age have an index of  1
 
   index_shift <- min_age - 1
   

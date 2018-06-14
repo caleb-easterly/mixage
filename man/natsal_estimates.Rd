@@ -20,7 +20,7 @@ mixing matrices are often denote with the Greek letter omega.
 }
 \details{
 The mean partner age preference was modeled as a linear function of chooser age, as was the variance.
-The estimated mean and variance were used to define Laplace distributions. For details, see "A Journal Article", 2018.
+The estimated mean and variance were used to define Laplace distributions. For details, see " "Revisiting Assumptions about Age Preferences in Mathematical Models of Sexually Transmitted Infection", 2018.
 The data used was from the  2010 - 2012 wave of the National Survey of Sexual Attitudes and Lifestyles,
 a national British survey.
 }

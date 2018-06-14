@@ -14,7 +14,6 @@
 #' @param start_ages
 #' vector of the youngest ages included in each age group. 
 #' If \code{start_ages} is \code{c(12, 20, 30)}, the age groups are 12-19, 20-29, and 30 to \code{max_age - 1}. 
-#' 
 #'
 #' @param age_distribution
 #' Optional: a vector of length \code{length(seq(min(start_ages), max_age))},
@@ -22,6 +21,10 @@
 #' proportion of the model population with age \code{i}. This vector defines the proportion of the model population with every \emph{age}, not \emph{age group}. If not provided, the 2011 U.S.
 #' life tables are used to estimate the population age distribution. 
 #' 
+#' @return A list with the following elements:\enumerate{
+#' \item \code{all_AIC}: the Akaike information criterion for each model
+#' \item \code{best_structure}: the best-fitting model
+#' }
 #' 
 #' @export
 best_age_mixing <- function(choice_data,
@@ -30,7 +33,7 @@ best_age_mixing <- function(choice_data,
                             age_distribution = NULL) {
     dv <- matrix(c("normal", rep("gamma", 2),
                  "identity", "log", "identity"), nrow = 3)
-
+    colnames(dv) <- c('distribution', 'link')
     mixing_mats <- vector(length = nrow(dv), mode = "list")
     AIC <- rep(0, nrow(dv))
     for (i in 1:nrow(dv)) {

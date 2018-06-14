@@ -1,15 +1,24 @@
-# calculate age distribution
-# @param all_ind
-# List of vectors of all ages in each age group
-# 
-# @param death_prob
-# Length 99 vector. First entry is probability of dying in the next year for 1-year-old,
-# 12th entry is for 12-year-old, and so on. 
-# 
-calculate_age_distribution <- function(all_ind, death_prob = NULL){
+#' Calculate age distribution.
+#' @description
+#' If you have annual probabilities of death (from life tables),
+#' you can use this to calculate an age distribution for \link[mixage]{estimate_age_mixing}
+#'
+#' @param min_age 
+#' minimum model age
+#'
+#' @param max_age
+#' maximum model age
+#' 
+#' @param death_prop
+#' Optional: a length 99 vector of annual probabilities of death for 1-year-olds to 99-year-olds
+#' 
+#' @return \code{age_prop}: the proportion of the model population with each age
+#' @export
+calculate_single_year_age_distribution <- function(min_age, max_model_age, death_prob = NULL){
+    single_year_ind <- seq(min_age, max_model_age)
+    
     # calculate start ages from list
-    start_ages <- sapply(all_ind, min)
-    n_age <- length(all_ind)
+    n_age <- length(single_year_ind)
     
     # if user does not provide death rates, use built in (uk life tables)
     if (is.null(death_prob)){
@@ -24,8 +33,8 @@ calculate_age_distribution <- function(all_ind, death_prob = NULL){
         
         ### convert probabilities of death to rates
         #create vector of death rates, mu
-        muM <- death_rate(death_prob = mprob, indices = all_ind)
-        muF <- death_rate(death_prob = fprob, indices = all_ind)
+        muM <- death_rate(death_prob = mprob, indices = single_year_ind)
+        muF <- death_rate(death_prob = fprob, indices = single_year_ind)
         
         # get the average of male and female rates
         mu <- rowMeans(cbind(muM, muF))
@@ -38,33 +47,26 @@ calculate_age_distribution <- function(all_ind, death_prob = NULL){
         }
         names(death_prob) <- as.character(1:99)
         
-        # number of age groups
-        n_age <- length(all_ind)
-        
         ### convert probabilities of death to rates
         #create vector of death rates, mu
-        mu <- death_rate(death_prob = death_prob, indices = all_ind)
+        mu <- death_rate(death_prob = death_prob, indices = single_year_ind)
         
     }
     
 
     ## aging rate calculations ####
     
-    #calculate bands for aging calculation
-    
-    age_bandwidths <- sapply(all_ind, length)
+    # bandwidths (number of years in each age group) is 1
+    # because these are single years
+    age_bandwidths <- rep(1, n_age)
     
     # d is aging rate 
     d <- transfer_rate(mu, age_bandwidths)
     
-    ### calculate proportion of population in each age class ####
-    
-    #age are the all-purpose names, which contain the beginning year of each age group
-    age <- as.character(start_ages)
+    ### calculate proportion of population in each year of age ####
     
     #initialize age_proportions vector
     age_prop <- rep(0, n_age)
-    names(d) <- names(mu) <- names(age_prop) <- age
     
     #using Elbasha, et al. 2007, Appendix, pg. 10
     # explicit translation of first formula on pg. 10
@@ -76,7 +78,7 @@ calculate_age_distribution <- function(all_ind, death_prob = NULL){
     # inner product/sum
     for (rr in 2:n_age) {
         for (jj in 2:rr) {
-            inner_acc <- ( d[age[jj - 1]] / (d[age[jj]] + mu[age[jj]]) ) * inner_acc
+            inner_acc <- ( d[jj - 1] / (d[jj] + mu[jj]) ) * inner_acc
         }
         acc <- acc + inner_acc
         inner_acc <- 1
@@ -86,9 +88,8 @@ calculate_age_distribution <- function(all_ind, death_prob = NULL){
     age_prop[1] <- 1 / (1 + acc)
     
     # calculate proportions in other age groups
-    for (AG in age[-1]) {
-        prev_age <- age[which(age == AG) - 1]
-        age_prop[AG] <- d[prev_age] * age_prop[prev_age]  / (d[AG] + mu[AG])
+    for (ag in 2:n_age) {
+        age_prop[ag] <- d[ag - 1] * age_prop[ag - 1]  / (d[ag] + mu[ag])
     }
-    return(list("age_prop" = age_prop, "d" = d, "mu" = mu))
+    return(age_prop)
 }

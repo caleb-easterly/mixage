@@ -12,7 +12,7 @@ test_that("def_age_group_list returns the correct list", {
 })
 
 test_that("age distribution sums to one", {
-    all_ind <- def_age_group_list(start_ages, max_age)
-    calc_age_dist <- calculate_age_distribution(all_ind)$age_prop
+    all_ind <- 12:24
+    calc_age_dist <- calculate_single_year_age_distribution(min(all_ind), max(all_ind))
     expect_equal(sum(calc_age_dist), 1)
 })

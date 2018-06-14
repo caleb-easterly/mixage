@@ -34,7 +34,7 @@
 #' @param age_distribution
 #' Optional: a vector of length \code{length(seq(min(start_ages), max_age))},
 #' where the \code{i}th entry is the
-#' proportion of the model population with age \code{i}. This vector defines the proportion of the model population with every \emph{age}, not \emph{age group}. If not provided, the 2010-2012 U.K.
+#' proportion of the model population with age \code{i + min(start_ages) - 1} - that is, the first entry is \code{min(start_ages)}, and the second entry is \code{min(start_ages) + 1}. This vector defines the proportion of the model population with every \emph{age}, not \emph{age group}. If not provided, the 2010-2012 U.K.
 #' life tables are used to estimate the population age distribution (see \link[mixage]{uk_life_table}). 
 #' 
 #' @return A list, where MOME is the male age mixing matrix, FOME is the female age mixing matrix, AIC is the AIC of the estimated statistical model, and \code{fits} has information on the fit (can be used for sensitivity analysis). 
@@ -111,6 +111,11 @@ estimate_age_mixing <- function(choice_data,
                 "fits" = fits))
 }
 
+
+#' Fill mixing matrices based on estimates.
+#' Mostly private function - only used in sensitivity analysis.
+#' 
+#' @export
 fill_omegas <- function(distribution, fits, start_ages, max_age){
     n_age <- length(start_ages)
     #set up and fill MOME and FOME
@@ -164,6 +169,7 @@ fill_omegas <- function(distribution, fits, start_ages, max_age){
 # 
 # @param max_age
 # The maximum age within the model population. Default is 74, so the last age group is (maximum start age) to (max_age - 1). 
+#' @export
 def_age_group_list <- function(start_ages, max_age = 74){
     #number of age groups
     n_age <- length(start_ages)

@@ -13,6 +13,9 @@ define_age_group_matrix(start_ages, max_age = 74, age_distribution = NULL)
 
 \item{age_distribution}{A length 99 vector with the proportion of in the population who is ages 1,2,3,..., 99.}
 }
+\value{
+A list with the elements \code{MOME} and \code{FOME} (male and female 'omega'), both matrices with a row and column for each age group. The entry MOME[i, j] is the probability that a male in age group i chooses a female of age group j as a partner.
+}
 \description{
 Uses the best estimates from "Revisiting Assumptions about Age Preferences in Mathematical 
 Models of Sexually Transmitted Infection" (Easterly, et al., 2018) to define male and female age mixing matrices for the supplied age groups.
