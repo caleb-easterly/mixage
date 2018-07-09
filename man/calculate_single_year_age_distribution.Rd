@@ -4,20 +4,16 @@
 \alias{calculate_single_year_age_distribution}
 \title{Calculate age distribution.}
 \usage{
-calculate_single_year_age_distribution(min_age, max_model_age,
-  death_prob = NULL)
+calculate_single_year_age_distribution(min_age, max_model_age)
 }
 \arguments{
 \item{min_age}{minimum model age}
 
-\item{max_age}{maximum model age}
-
-\item{death_prop}{Optional: a length 99 vector of annual probabilities of death for 1-year-olds to 99-year-olds}
+\item{max_model_age}{maximum model age}
 }
 \value{
 \code{age_prop}: the proportion of the model population with each age
 }
 \description{
-If you have annual probabilities of death (from life tables),
-you can use this to calculate an age distribution for \link[mixage]{estimate_age_mixing}
+Calculate an age distribution from annual probabilities of death (from life tables).
 }
