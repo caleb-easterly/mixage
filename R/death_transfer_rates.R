@@ -18,6 +18,6 @@ death_rate <- function(death_prob, indices) {
 # @param band, scalar w/ number of years in band
 # @param pop_growth, rate of population growth (always 0 in this model)
 # @value: aging rate from one age group to the following age group
-transfer_rate <- function(death_rate, band, pop_growth = 0) {
+aging_rate <- function(death_rate, band, pop_growth = 0) {
     (death_rate + pop_growth)/(exp(band * (death_rate + pop_growth)) - 1)
 }
