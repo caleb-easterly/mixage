@@ -9,7 +9,7 @@ The ith row is the age distribution of the partners of people with age i.
 Thus, MOME[i, j] is the probability that a male i years old chooses a female partner that is j years old. 
 To convert this matrix to age groups you supply, use \link{mixage}{define_age_group_matrix}}
 \source{
-\url{https://www.cdc.gov/nchs/products/life_tables.htm}
+\url{http://natsal.ac.uk/natsal-3.aspx}
 }
 \usage{
 natsal_estimates
