@@ -16,7 +16,7 @@ natsal_estimates
 }
 \description{
 A list of two matrices, "MOME" and "FOME", short for "Male Omega" and "Female Omega", so named because
-mixing matrices are often denote with the Greek letter omega.
+mixing matrices are often denoted with the Greek letter omega.
 }
 \details{
 The mean partner age preference was modeled as a linear function of chooser age, as was the variance.

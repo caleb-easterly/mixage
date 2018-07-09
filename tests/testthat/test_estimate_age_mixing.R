@@ -13,7 +13,9 @@ test_that("MOME and FOME have rowsums equal to 1", {
                                            link = dv[i, 2],
                                            max_age = max_age,
                                            age_distribution = age_dist)
-        expect_equal(rowSums(mixing_mats$MOME), rep(1, n_age))
-        expect_equal(rowSums(mixing_mats$FOME), rep(1, n_age))
+        expected <- rep(1, n_age)
+        names(expected) <- start_ages
+        expect_equal(rowSums(mixing_mats$MOME), expected)
+        expect_equal(rowSums(mixing_mats$FOME), expected)
     }
 })

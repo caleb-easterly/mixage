@@ -160,6 +160,7 @@ fill_omegas <- function(distribution, fits, start_ages, max_age){
         
     }
     
+    dimnames(MOME) <- dimnames(FOME) <- list(start_ages, start_ages)
     return(list("MOME" = MOME, "FOME" = FOME))
 }
 

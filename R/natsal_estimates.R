@@ -90,10 +90,12 @@
 # pt_choice$sex[which(pt_choice$sex == 2)] <- "Female"
 #
 # # second, use estimate_age_mixing
+# start_ages <- seq(12, 73)
 # natsal_estimates <- estimate_age_mixing(pt_choice,
-#                                             start_ages = seq(12, 73),
+#                                             start_ages = start_ages,
 #                                             max_age = 74,
 #                                             distribution='gamma',
 #                                             link = 'identity')
 # natsal_estimates <- list("MOME" = natsal_estimates$MOME, "FOME" = natsal_estimates$FOME)
+# dimnames(natsal_estimates$MOME) <- dimnames(natsal_estimates$FOME) <- list(start_ages, start_ages)
 # save(natsal_estimates, file="data/natsal_estimates.rda")

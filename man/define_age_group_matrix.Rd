@@ -7,21 +7,20 @@
 define_age_group_matrix(start_ages, max_age = 74, age_distribution = NULL)
 }
 \arguments{
-\item{start_ages}{A numeric vector, where the ith entry is the youngest age in the ith age group}
+\item{start_ages}{A numeric vector, where the ith entry is the youngest age in the ith age group. The youngest age must be greater than 12, because data for younger ages was not estimated.}
 
 \item{max_age}{The oldest age in the model population. The oldest age group will include the ages from \code{max(start_age)} to \code{max_age - 1}}
 
 \item{age_distribution}{A length 99 vector with the proportion of in the population who is ages 1,2,3,..., 99.}
 }
 \value{
-A list with the elements \code{MOME} and \code{FOME} (male and female 'omega'), both matrices with a row and column for each age group. The entry MOME[i, j] is the probability that a male in age group i chooses a female of age group j as a partner.
+A list with the elements \code{MOME} and \code{FOME} (male and female 'omega'), both matrices with a row and column for each age group. The row and column names indicate the starting age of the age group. For example, the entry MOME[i, j] is the probability that a man in age group i chooses a woman of age group j as a partner, and the entry MOME["53", "54"] is the probability that a 53-year-old man chooses a 54-year-old woman as a partner (assuming single-year age groups).
 }
 \description{
-Uses the best estimates from "Revisiting Assumptions about Age Preferences in Mathematical 
-Models of Sexually Transmitted Infection" (Easterly, et al., 2018) to define male and female age mixing matrices for the supplied age groups.
+Uses the best estimates from "Revisiting Assumptions about Age-Based Mixing Representations in Mathematical Models of Sexually Transmitted Infection" (Easterly, et al., 2018) to define male and female age mixing matrices for the supplied age groups.
 }
 \details{
-The function takes the best estimates from "Revisiting Assumptions about Age Preferences in Mathematical Models of STIs" and adapts them to user-supplied age groups. 
+The function takes the best estimates from "Revisiting Assumptions about Age Preferences in Mathematical Models of STIs" and adapts them to user-supplied age groups.
 If a population other than the U.S. population is used, an age distribution for that population is needed.
 This is needed to 'average' probabilities within an age group, by using the law of total probability. 
 The probability of someone in age group \eqn{i} choosing someone in age group \eqn{j} is 
