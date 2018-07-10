@@ -17,7 +17,7 @@ List of 2
  $ FOME: num [1:6, 1:6] 0.62054 0.10251 0.03308 0.01485 0.00777 ...
 ```
 
-where `MOME` is the male age mixing matrix and `FOME` is the female age mixing matrix. The $i$th row of `FOME` is the partner age distribution for females in age group $i$, and `FOME[i, j]` is the probability that a female of age group `i` chooses a male partner in age group `j`. 
+where `MOME` is the male age mixing matrix and `FOME` is the female age mixing matrix. The `i`th row of `FOME` is the partner age distribution for females in age group `i`, and `FOME[i, j]` is the probability that a female of age group `i` chooses a male partner in age group `j`. 
 
 ## Calculate age mixing with your data
 
