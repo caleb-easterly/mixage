@@ -1,13 +1,13 @@
-This R package contains functions used in "Revisiting Assumptions about Age Preferences in Mathematical Models of Sexually Transmitted Infection" (Easterly, et al., 2018) to estimate age mixing. To obtain it on your local R installation, install the `devtools` package and then run `devtools::install_github("caleb-easterly/mixage")`. 
+This R package contains functions used in "Revisiting Assumptions about Age Preferences in Mathematical Models of Sexually Transmitted Infection" (Easterly, et al., 2018) to estimate age mixing in heterosexual populations. To obtain it on your local R installation, install the `devtools` package and then run `devtools::install_github("caleb-easterly/mixage")`. 
 
 ## Age mixing: Natsal-3 data
 To use our estimates of age mixing with your own age groups, define a vector of the minimum age in each age group (age mixing is only supported for ages 12 and up):
 ```
-> your_age_groups <- c(12, 20, 30, 40, 50, 60)
+your_age_groups <- c(12, 20, 30, 40, 50, 60)
 ```
 Then, run `define_age_group_matrix()` with your age groups, the maximum age in your population (the max age must be 74 or below), and (optionally), a vector of length 99 with the age distribution from ages 1 to 99.
 ```
-> mixage <- define_age_group_matrix(your_age_groups, max_age = 74)
+mixage <- define_age_group_matrix(your_age_groups, max_age = 74)
 ```
 If an age distribution is not provided, the [U.K. 2010-2012 life tables](https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/lifeexpectancies/datasets/nationallifetablesunitedkingdomreferencetables) are used to define an age distribution. The function returns a list of matrices 
 ```
@@ -57,6 +57,7 @@ This is reassuring, as the data were sampled from a normal distribution (see the
 
 ## Contact
 Developer and Maintainer: Caleb Easterly (easte080@umn.edu)
-Contributors: Fernando Alarid-Escudero
+
+Contributors: [Fernando Alarid-Escudero](https://github.com/feralaes), Szu-Yu (Zoe) Kao
 
 Please contact me with issues, questions, and suggestions (or open an issue on Github).
