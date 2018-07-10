@@ -8,8 +8,8 @@
 #' 
 #' @details 
 #' 
-#' The function takes the best estimates from "Revisiting Assumptions about Age Preferences in Mathematical Models of STIs" and adapts them to user-supplied age groups.
-#' If a population other than the U.S. population is used, an age distribution for that population is needed.
+#' The function takes the best estimates from "Revisiting Assumptions about Age-Based Mixing Representations in Mathematical Models of STIs" and adapts them to user-supplied age groups.
+#' If a population other than the U.K. population is used, an age distribution for that population is needed.
 #' This is needed to 'average' probabilities within an age group, by using the law of total probability. 
 #' The probability of someone in age group \eqn{i} choosing someone in age group \eqn{j} is 
 #' \deqn{Pr(P = j | C = i) = \sum Pr(P = j | C = k) Pr(C = k) }
@@ -17,7 +17,7 @@
 #' The full population age distribution is used to calculate the probability that
 #' someone within age group \eqn{i} has age \eqn{k}.
 #' 
-#' @return A list with the elements \code{MOME} and \code{FOME} (male and female 'omega'), both matrices with a row and column for each age group. The row and column names indicate the starting age of the age group. For example, the entry MOME[i, j] is the probability that a man in age group i chooses a woman of age group j as a partner, and the entry MOME["53", "54"] is the probability that a 53-year-old man chooses a 54-year-old woman as a partner (assuming single-year age groups).
+#' @return A list with the elements \code{MOME} and \code{FOME} (male and female 'omega'), both matrices with a row and column for each age group. The row and column names indicate the starting age of the age group. For example, the entry \code{MOME[i, j]} is the probability that a man in age group i chooses a woman of age group j as a partner, and the entry \code{MOME["53", "54"]} is the probability that a 53-year-old man chooses a 54-year-old woman as a partner (assuming single-year age groups).
 #'
 #' 
 #' @export
